@@ -1,0 +1,23 @@
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+# Load the SportsBERT model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained("microsoft/SportsBERT")
+model = AutoModelForSequenceClassification.from_pretrained("microsoft/SportsBERT").to(device)
+
+# Test inputs to see which label corresponds to positive or negative sentiment
+test_sentences = [
+    "The player had an outstanding performance!",
+    "The player struggled and underperformed."
+]
+
+tokens = tokenizer(test_sentences, return_tensors="pt", padding=True).to(device)
+result = model(tokens["input_ids"], attention_mask=tokens["attention_mask"])["logits"]
+probabilities = torch.nn.functional.softmax(result, dim=-1)
+
+# Print out the probabilities
+for i, sentence in enumerate(test_sentences):
+    print(f"Sentence: {sentence}")
+    print(f"Label probabilities: {probabilities[i]}")
